@@ -23,6 +23,7 @@ game_data_df = pd.DataFrame(data)
 # === Clean + Sort ===
 game_data_df["Date"] = pd.to_datetime(game_data_df["Date"])
 game_data_df = game_data_df.sort_values("Date")
+game_data_df["Date"] = game_data_df["Date"].dt.strftime("%Y-%m-%d")
 
 # === Leaderboard Calculation ===
 points = {}
