@@ -1,0 +1,5 @@
+# Ignore secret credentials
+.streamlit/secrets.toml
+
+# Ignore private key from google cloud's service account
+streamlit-volleyball-service-account.json
