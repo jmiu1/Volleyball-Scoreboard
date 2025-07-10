@@ -61,7 +61,7 @@ with st.form("log_match"):
 
 # === Display Match History and Leaderboard ===
 st.subheader("📋 Match History")
-st.dataframe(game_data_df.style.hide_index(), use_container_width=True)
+st.dataframe(game_data_df.reset_index(drop=True), use_container_width=True)
 
 st.subheader("🏆 Leaderboard")
-st.table(leaderboard_df.style.hide_index())
+st.table(leaderboard_df.reset_index(drop=True))
