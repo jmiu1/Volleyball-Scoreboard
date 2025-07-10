@@ -14,7 +14,7 @@ credentials = Credentials.from_service_account_info(
 )
 
 gc = gspread.authorize(credentials)
-sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE")
+sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Sij1rPlC4WGGP37S38DTm2lFpaSd-3_ldsY2ABf663s")
 worksheet = sh.worksheet("Games")
 data = worksheet.get_all_records()
 
