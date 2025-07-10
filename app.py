@@ -1,13 +1,24 @@
 import streamlit as st
 import pandas as pd
+import gspread
+from google.oauth2.service_account import Credentials
 from datetime import datetime
 
 st.set_page_config(page_title="Beach Volleyball League Tracker", page_icon="🏐")
 st.title("🏐 Catholic Beach Volleyball League Tracker")
 
-# === Load Google Sheet Data ===
-conn = st.connection("gsheets", type="gspread")
-df = conn.read(worksheet="Games", usecols=["Date", "Team 1", "Score 1", "Team 2", "Score 2"], ttl=5)
+# === Load Credentials from secrets.toml ===
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
+credentials = Credentials.from_service_account_info(
+    st.secrets["connections"]["gsheets"], scopes=scope
+)
+
+gc = gspread.authorize(credentials)
+sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE")
+worksheet = sh.worksheet("Games")
+data = worksheet.get_all_records()
+
+df = pd.DataFrame(data)
 
 # === Clean + Sort ===
 df["Date"] = pd.to_datetime(df["Date"])
@@ -40,7 +51,11 @@ with st.form("log_match"):
             "Score 2": score2
         }])
         updated = pd.concat([df, new_match], ignore_index=True)
-        conn.update(worksheet="Games", data=updated)
+
+        # Clear and update worksheet with new data
+        worksheet.clear()
+        worksheet.update([updated.columns.values.tolist()] + updated.values.tolist())
+
         st.success("Match logged!")
         st.rerun()
 
