@@ -18,18 +18,18 @@ sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1Sij1rPlC4WGGP37S38D
 worksheet = sh.worksheet("Games")
 data = worksheet.get_all_records()
 
-df = pd.DataFrame(data)
+game_data_df = pd.DataFrame(data)
 
 # === Clean + Sort ===
-df["Date"] = pd.to_datetime(df["Date"])
-df = df.sort_values("Date")
+game_data_df["Date"] = pd.to_datetime(game_data_df["Date"])
+game_data_df = game_data_df.sort_values("Date")
 
 # === Leaderboard Calculation ===
 points = {}
-for _, row in df.iterrows():
+for _, row in game_data_df.iterrows():
     points[row["Team 1"]] = points.get(row["Team 1"], 0) + row["Score 1"]
     points[row["Team 2"]] = points.get(row["Team 2"], 0) + row["Score 2"]
-leaderboard = pd.DataFrame(points.items(), columns=["Team", "Points"]).sort_values("Points", ascending=False)
+leaderboard_df = pd.DataFrame(points.items(), columns=["Team", "Points"]).sort_values("Points", ascending=False)
 
 # === Match Input Form ===
 st.subheader("➕ Log a New Match")
@@ -50,7 +50,7 @@ with st.form("log_match"):
             "Team 2": team2,
             "Score 2": score2
         }])
-        updated = pd.concat([df, new_match], ignore_index=True)
+        updated = pd.concat([game_data_df, new_match], ignore_index=True)
 
         # Clear and update worksheet with new data
         worksheet.clear()
@@ -61,7 +61,7 @@ with st.form("log_match"):
 
 # === Display Match History and Leaderboard ===
 st.subheader("📋 Match History")
-st.dataframe(df, use_container_width=True)
+st.dataframe(game_data_df.style.hide_index(), use_container_width=True)
 
 st.subheader("🏆 Leaderboard")
-st.table(leaderboard)
+st.table(leaderboard_df.style.hide_index())
