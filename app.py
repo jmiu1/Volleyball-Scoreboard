@@ -27,38 +27,68 @@ game_data_df["Date"] = game_data_df["Date"].dt.strftime("%Y-%m-%d")
 
 # === Leaderboard Calculation ===
 points = {}
+matches = {}
+
 for _, row in game_data_df.iterrows():
-    points[row["Team 1"]] = points.get(row["Team 1"], 0) + row["Score 1"]
-    points[row["Team 2"]] = points.get(row["Team 2"], 0) + row["Score 2"]
-leaderboard_df = pd.DataFrame(points.items(), columns=["Team", "Points"]).sort_values("Points", ascending=False)
+    t1, s1 = row["Team 1"], row["Score 1"]
+    t2, s2 = row["Team 2"], row["Score 2"]
+
+    points[t1] = points.get(t1, 0) + s1
+    points[t2] = points.get(t2, 0) + s2
+
+    matches[t1] = matches.get(t1, 0) + 1
+    matches[t2] = matches.get(t2, 0) + 1
+
+leaderboard_df = pd.DataFrame([
+    {
+        "Team": team,
+        "Points": points.get(team, 0),
+        "Matches": matches.get(team, 0),
+        "Points/Match": round(points.get(team, 0) / matches.get(team, 1), 2)  # Safe fallback
+    }
+    for team in points
+])
+
+leaderboard_df = leaderboard_df.sort_values("Points", ascending=False)
 
 # === Match Input Form ===
 st.subheader("➕ Log a New Match")
+
+team_options = [
+    "A - Piranhas of Peace",
+    "B - Gaudium et Spikes",
+    "C - Co-Redeemers",
+    "D - D15"
+]
+
 with st.form("log_match"):
     cols = st.columns(5)
     date = cols[0].date_input("Date", datetime.today())
-    team1 = cols[1].text_input("Team 1")
+    team1 = cols[1].selectbox("Team 1", team_options)
     score1 = cols[2].number_input("Team 1 Score", min_value=0, value=0)
-    team2 = cols[3].text_input("Team 2")
+    team2 = cols[3].selectbox("Team 2", team_options)
     score2 = cols[4].number_input("Team 2 Score", min_value=0, value=0)
+
     submitted = st.form_submit_button("Submit Match")
 
     if submitted:
-        new_match = pd.DataFrame.from_records([{
-            "Date": date.strftime("%Y-%m-%d"),
-            "Team 1": team1,
-            "Score 1": score1,
-            "Team 2": team2,
-            "Score 2": score2
-        }])
-        updated = pd.concat([game_data_df, new_match], ignore_index=True)
+        if team1 == team2:
+            st.error("Team 1 and Team 2 cannot be the same!")
+        else:
+            new_match = pd.DataFrame.from_records([{
+                "Date": date.strftime("%Y-%m-%d"),
+                "Team 1": team1,
+                "Score 1": score1,
+                "Team 2": team2,
+                "Score 2": score2
+            }])
+            updated = pd.concat([game_data_df, new_match], ignore_index=True)
 
-        # Clear and update worksheet with new data
-        worksheet.clear()
-        worksheet.update([updated.columns.values.tolist()] + updated.values.tolist())
+            worksheet.clear()
+            worksheet.update([updated.columns.values.tolist()] + updated.values.tolist())
 
-        st.success("Match logged!")
-        st.rerun()
+            st.success("Match logged!")
+            st.rerun()
 
 # === Display Match History and Leaderboard ===
 st.subheader("📋 Match History")
